@@ -1,6 +1,6 @@
 {
   "name": "hardhat-descriptor",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Hardhat 3 plugin that uses Claude to generate ERC-7730 clear-signing descriptors from your compiled contracts.",
   "type": "module",
   "main": "./dist/src/index.js",
