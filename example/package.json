@@ -1,0 +1,11 @@
+{
+  "name": "sample-vault-project",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "dependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.0.0",
+    "hardhat": "^3.0.0",
+    "hardhat-descriptor": "file:.."
+  }
+}

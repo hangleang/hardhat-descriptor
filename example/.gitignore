@@ -1,0 +1,10 @@
+node_modules
+cache
+artifacts
+descriptors
+ignition/deployments
+package-lock.json
+*.log
+.env
+.env.*
+!.env.example

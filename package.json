@@ -1,0 +1,53 @@
+{
+  "name": "hardhat-descriptor",
+  "version": "0.1.0",
+  "description": "Hardhat 3 plugin that uses Claude to generate ERC-7730 clear-signing descriptors from your compiled contracts.",
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "schema",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "fetch-schema": "node --import tsx scripts/fetch-schema.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "hardhat",
+    "hardhat-plugin",
+    "erc-7730",
+    "clear-signing",
+    "ethereum",
+    "claude",
+    "anthropic"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "hardhat": "^3.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "@google/generative-ai": "^0.24.1",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "openai": "^6.38.0",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "hardhat": "^3.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
