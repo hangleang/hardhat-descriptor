@@ -77,6 +77,50 @@ function stripEmptyParams(entry: unknown): void {
   }
 }
 
+// Ledger device screens truncate intents past 30 chars.
+// For `intent` we measure the literal string. For `interpolatedIntent` we estimate
+// the rendered length by replacing each `{placeholder}` with a conservative width
+// (amounts, addresses, and tokenAmounts all render wider than the placeholder name).
+const INTENT_MAX = 30;
+const PLACEHOLDER_RENDERED_WIDTH = 12;
+function estimateRenderedLength(template: string): number {
+  let literal = 0;
+  let placeholders = 0;
+  let inside = false;
+  for (const ch of template) {
+    if (ch === "{") inside = true;
+    else if (ch === "}") {
+      if (inside) placeholders += 1;
+      inside = false;
+    } else if (!inside) {
+      literal += 1;
+    }
+  }
+  return literal + placeholders * PLACEHOLDER_RENDERED_WIDTH;
+}
+function warnLongIntent(
+  entry: unknown,
+  key: string,
+  warnings: string[],
+): void {
+  if (!isObject(entry)) return;
+  const intent = (entry as Record<string, unknown>).intent;
+  if (typeof intent === "string" && intent.length > INTENT_MAX) {
+    warnings.push(
+      `display.formats["${key}"].intent is ${intent.length} chars (max ${INTENT_MAX}); Ledger devices will truncate. Shorten before submitting.`,
+    );
+  }
+  const interpolated = (entry as Record<string, unknown>).interpolatedIntent;
+  if (typeof interpolated === "string") {
+    const est = estimateRenderedLength(interpolated);
+    if (est > INTENT_MAX) {
+      warnings.push(
+        `display.formats["${key}"].interpolatedIntent renders to ~${est} chars (max ${INTENT_MAX}, placeholders estimated at ${PLACEHOLDER_RENDERED_WIDTH} chars each); Ledger devices will truncate. Shorten or remove placeholders before submitting.`,
+      );
+    }
+  }
+}
+
 export function postprocess(input: PostprocessInput): PostprocessResult {
   const kind = input.kind ?? "calldata";
   return kind === "eip712"
@@ -120,19 +164,29 @@ function postprocessCalldata(input: PostprocessInput): PostprocessResult {
     const entry = formats[key];
     stripRequired(entry);
     stripEmptyParams(entry);
+    warnLongIntent(entry, key, warnings);
+    // ERC-7730: tx-level fields like msg.value live under @., not $. (which targets the descriptor itself).
+    // Rewrite any LLM-emitted $.value to @.value before deduping below.
+    if (isObject(entry) && Array.isArray(entry.fields)) {
+      for (const f of entry.fields) {
+        if (isObject(f) && f.path === "$.value") {
+          (f as Record<string, unknown>).path = "@.value";
+        }
+      }
+    }
     if (payableSignatures.has(key) && isObject(entry)) {
       const fields = Array.isArray(entry.fields) ? [...entry.fields] : [];
       const hasValueField = fields.some(
-        (f) => isObject(f) && typeof f.path === "string" && f.path === "$.value",
+        (f) => isObject(f) && typeof f.path === "string" && f.path === "@.value",
       );
       if (!hasValueField) {
         fields.push({
-          path: "$.value",
+          path: "@.value",
           label: "Amount",
           format: "amount",
         });
         entry.fields = fields;
-        warnings.push(`Injected $.value field into display.formats["${key}"] (payable function).`);
+        warnings.push(`Injected @.value field into display.formats["${key}"] (payable function).`);
       }
     }
   }
@@ -191,6 +245,25 @@ function postprocessEip712(input: PostprocessInput): PostprocessResult {
     }
     stripRequired(formats[key]);
     stripEmptyParams(formats[key]);
+    warnLongIntent(formats[key], key, warnings);
+    // EIP-712 has no transaction container, so @.value / $.value field paths are invalid.
+    // If the LLM ignored the prompt and emitted one, drop it before it reaches the registry.
+    const entry = formats[key];
+    if (isObject(entry) && Array.isArray(entry.fields)) {
+      const before = entry.fields.length;
+      const kept = entry.fields.filter((f: unknown) => {
+        if (isObject(f) && (f.path === "@.value" || f.path === "$.value")) {
+          return false;
+        }
+        return true;
+      });
+      entry.fields = kept;
+      if (kept.length !== before) {
+        warnings.push(
+          `Dropped tx-level value field from display.formats["${key}"] — EIP-712 has no msg.value.`,
+        );
+      }
+    }
   }
 
   if (Object.keys(formats).length === 0) {

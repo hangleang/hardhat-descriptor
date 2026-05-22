@@ -82,10 +82,10 @@ describe("postprocess", () => {
     });
     const formats = (descriptor!.display as any).formats;
     expect(formats["deposit()"].fields).toEqual([
-      { path: "$.value", label: "Amount", format: "amount" },
+      { path: "@.value", label: "Amount", format: "amount" },
     ]);
     expect(formats["ping()"].fields).toEqual([]);
-    expect(warnings.some((w) => w.includes("Injected $.value"))).toBe(true);
+    expect(warnings.some((w) => w.includes("Injected @.value"))).toBe(true);
   });
 
   it("does not duplicate $.value when the LLM already supplied one", () => {
@@ -127,6 +127,32 @@ describe("postprocess", () => {
     const formats = (descriptor!.display as any).formats;
     expect(formats["deposit()"].fields).toHaveLength(1);
     expect(formats["deposit()"].fields[0].label).toBe("Deposit Amount");
+  });
+
+  it("warns when interpolatedIntent placeholders push the rendered length past 30 chars", () => {
+    const cfg = resolveConfig({ owner: "Acme" });
+    const { warnings } = postprocess({
+      raw: {
+        display: {
+          formats: {
+            "transfer(address recipient, uint256 amount)": {
+              interpolatedIntent: "Send {amount} to {recipient}",
+              fields: [],
+            },
+          },
+        },
+      },
+      artifact,
+      config: cfg,
+      address: undefined,
+      chainId: 1,
+    });
+    expect(
+      warnings.some(
+        (w) =>
+          w.includes("interpolatedIntent renders to") && w.includes("max 30"),
+      ),
+    ).toBe(true);
   });
 
   it("drops unknown signatures and warns", () => {
@@ -215,6 +241,37 @@ describe("postprocess", () => {
       expect(
         warnings.some((w) => w.includes("transfer(address,uint256)")),
       ).toBe(true);
+    });
+
+    it("drops stray @.value / $.value fields from EIP-712 formats", () => {
+      const cfg = resolveConfig({ owner: "Acme" });
+      const { descriptor, warnings } = postprocess({
+        raw: {
+          display: {
+            formats: {
+              "Permit(address owner,uint256 value)": {
+                intent: "Approve",
+                fields: [
+                  { path: "owner", label: "Owner", format: "addressName" },
+                  { path: "@.value", label: "Amount", format: "amount" },
+                  { path: "$.value", label: "Amount", format: "amount" },
+                ],
+              },
+            },
+          },
+        },
+        artifact,
+        config: cfg,
+        address: undefined,
+        chainId: 1,
+        kind: "eip712",
+      });
+      const fields = (descriptor!.display as any).formats[
+        "Permit(address owner,uint256 value)"
+      ].fields;
+      expect(fields).toHaveLength(1);
+      expect(fields[0].path).toBe("owner");
+      expect(warnings.some((w) => w.includes("EIP-712 has no msg.value"))).toBe(true);
     });
 
     it("returns null when no EIP-712 typed-data structs are present", () => {

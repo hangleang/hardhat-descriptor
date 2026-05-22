@@ -23,9 +23,12 @@ Output rules:
 - Each format entry may have only "intent", "interpolatedIntent", "fields", "$id" — do NOT include "required" or other extra keys.
 
 Writing good intents:
-- Intents must describe the user-visible EFFECT of the call, not restate the function name. Bad: "Deposit ETH". Good: "Deposit ETH into your vault balance".
-- Read the NatSpec @notice and the function/struct body for the semantic effect (what state changes, who is credited/debited, where funds go) and surface that in the intent.
-- Prefer second person ("your balance", "your tokens") when the contract acts on behalf of msg.sender.
+- Intents must describe the user-visible EFFECT of the call, not restate the function name.
+- HARD LIMIT: 30 characters max (Ledger device screens truncate beyond that). Count characters before emitting. Drop articles ("a", "the"), pronouns ("your"), and prepositional fluff to fit. Use noun phrases or imperative verbs without trailing context — the field rows below carry the detail.
+- Good examples (≤30 chars): "Deposit ETH to vault", "Approve token spending", "Permit token approval", "Withdraw ETH from vault".
+- Bad examples (too long): "Deposit ETH into your vault balance" (35), "Allow {owner} to withdraw {amount} ETH" (>30 after interpolation).
+- Read the NatSpec @notice and the function/struct body for the semantic effect (what state changes, who is credited/debited, where funds go) and compress it into ≤30 chars.
+- For interpolatedIntent, the {field} placeholders count as their RENDERED length — be conservative; prefer non-interpolated intents when the rendered string would exceed 30 chars.
 - Field labels should be Title Case and concise.
 - Use tokenAmount for ERC-20 token amounts (wei-denominated uint256 values that represent token quantities). Use amount for native ETH.
 - Use addressName for every address parameter. Choose types based on context (spender → ["wallet","contract"], recipient → ["wallet","eoa","contract"], token → ["token"]).`;
@@ -59,8 +62,8 @@ Calldata-specific rules:
 - Do not invent function selectors. Use the exact canonical signatures from the supplied list.
 
 Transaction-level paths (not ABI parameters):
-- "$.value" refers to msg.value (the ETH attached to the transaction).
-- For payable functions where msg.value carries the user-visible amount (e.g. deposits, payments, mints priced in ETH), include a field with path "$.value", a clear label, and format "amount". This lets the wallet show the ETH amount as a labelled descriptor row rather than only as the generic "Value" field.`;
+- "@.value" refers to msg.value (the ETH attached to the transaction). Note: "@." targets the containing transaction; "$." targets the descriptor file itself and is wrong for tx fields.
+- For payable functions where msg.value carries the user-visible amount (e.g. deposits, payments, mints priced in ETH), include a field with path "@.value", a clear label, and format "amount". This lets the wallet show the ETH amount as a labelled descriptor row rather than only as the generic "Value" field.`;
 
 const EIP712_SECTION = `EIP-712 descriptor shape (this task):
 
@@ -95,7 +98,7 @@ EIP-712-specific rules:
 - Extract typed-data structs from the Solidity source. Look for: \`bytes32 constant <NAME>_TYPEHASH = keccak256("<encodeType>")\` definitions, \`struct\` definitions referenced inside \`_hashTypedDataV4\` / \`abi.encode(TYPEHASH, ...)\`, ERC-2612 \`Permit\`, ERC-4337 \`UserOperation\`, and OpenZeppelin EIP712 usage.
 - One display.formats entry per primary type. The KEY MUST be the canonical EIP-712 \`encodeType\` string (NO spaces between fields): \`PrimaryType(type1 field1,type2 field2,...)\`. If the struct references other structs, append their encodings in alphabetical order per the EIP-712 spec.
 - Populate context.eip712.domain from the contract's EIP712 domain separator (typically the contract name as \`name\`, "1" as \`version\`). Use placeholders if the source does not specify version explicitly.
-- "$.value" is NOT valid for EIP-712 (no msg.value when signing typed data). Do not emit a $.value field.
+- "@.value" / "$.value" are NOT valid for EIP-712 (no msg.value when signing typed data). Do not emit a value field referencing tx data.
 - If the contract does NOT define any EIP-712 typed data (no TYPEHASH constants, no \`_hashTypedDataV4\` calls, no struct hashing), emit a descriptor with \`display.formats: {}\` and the runtime will skip writing it.`;
 
 export const SYSTEM_PROMPTS: Record<DescriptorKind, string> = {

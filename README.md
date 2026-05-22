@@ -4,7 +4,7 @@ A Hardhat 3 plugin that generates [ERC-7730](https://eips.ethereum.org/EIPS/eip-
 
 The plugin auto-detects Hardhat Ignition deployments and reuses cached LLM responses, so re-running after a fresh deploy applies real addresses without an extra API call.
 
-> **Review before publishing.** Generated descriptors are LLM output and may contain incorrect field labels, wrong formatter types, or hallucinated semantics. Always open each `descriptors/*.json`, verify it against your contract's actual behavior, and test it in a wallet preview before submitting to the [clear-signing registry](https://github.com/LedgerHQ/clear-signing-erc7730-registry) or shipping it to users. The plugin is a starting point, not a substitute for human review.
+> **Review before publishing.** Generated descriptors are LLM output and may contain incorrect field labels, wrong formatter types, or hallucinated semantics. Always open each `descriptors/*.json`, verify it against your contract's actual behavior, and test it in a wallet preview before submitting to the [clear-signing registry](https://github.com/ethereum/clear-signing-erc7730-registry) or shipping it to users. The plugin is a starting point, not a substitute for human review.
 
 ## Install
 

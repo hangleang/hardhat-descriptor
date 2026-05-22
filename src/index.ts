@@ -35,7 +35,6 @@ const lintTask = task(["descriptor", "lint"], "Validate ERC-7730 descriptors aga
   .addVariadicArgument({
     name: "files",
     description: "Descriptor files to lint. Defaults to descriptors in the configured outDir.",
-    defaultValue: [],
   })
   .setAction(() => import("./tasks/lint.js"))
   .build();
@@ -44,12 +43,11 @@ const submitTask = task(["descriptor", "submit"], "Open a draft PR to the ERC-77
   .addVariadicArgument({
     name: "files",
     description: "Descriptor files to submit. Defaults to descriptors in the configured outDir.",
-    defaultValue: [],
   })
   .addOption({
     name: "registry",
-    description: "Override the upstream registry repo (default ethereum/clear-signing-erc7730-registry).",
-    defaultValue: "",
+    description: "Override the upstream registry repo.",
+    defaultValue: "ethereum/clear-signing-erc7730-registry",
   })
   .addFlag({
     name: "yes",

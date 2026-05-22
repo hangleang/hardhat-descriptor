@@ -164,11 +164,16 @@ export async function submitToRegistry(opts: SubmitOptions): Promise<SubmitResul
   enableSshMultiplexing();
 
   const ghUser = run("gh", ["api", "user", "--jq", ".login"]).trim();
-  const fork = `${ghUser}/${upstream.split("/")[1]}`;
+  const ownsUpstream = upstream.split("/")[0] === ghUser;
+  const fork = ownsUpstream ? upstream : `${ghUser}/${upstream.split("/")[1]}`;
   const baseBranch = run("gh", ["api", `repos/${upstream}`, "--jq", ".default_branch"]).trim();
 
-  log.step(`forking ${c.bold(upstream)} to ${c.bold(fork)} (no-op if already forked)…`);
-  run("gh", ["repo", "fork", upstream, "--clone=false"]);
+  if (ownsUpstream) {
+    log.step(`${c.bold(upstream)} is already owned by ${c.bold(ghUser)} — skipping fork, will PR within the repo.`);
+  } else {
+    log.step(`forking ${c.bold(upstream)} to ${c.bold(fork)} (no-op if already forked)…`);
+    run("gh", ["repo", "fork", upstream, "--clone=false"]);
+  }
 
   const existing = findExistingPR(upstream, ghUser, entity);
 
@@ -181,22 +186,25 @@ export async function submitToRegistry(opts: SubmitOptions): Promise<SubmitResul
     );
     run("gh", ["repo", "clone", fork, repoDir, "--", "--depth=1", `--branch=${existing.branch}`]);
   } else {
-    log.step(`cloning fork to ${c.dim(repoDir)}…`);
+    log.step(`cloning ${ownsUpstream ? "registry" : "fork"} to ${c.dim(repoDir)}…`);
     run("gh", ["repo", "clone", fork, repoDir, "--", "--depth=1"]);
-    const upstreamUrl = `https://github.com/${upstream}.git`;
-    try {
-      run("git", ["remote", "add", "upstream", upstreamUrl], repoDir);
-    } catch {
-      run("git", ["remote", "set-url", "upstream", upstreamUrl], repoDir);
+    if (!ownsUpstream) {
+      const upstreamUrl = `https://github.com/${upstream}.git`;
+      try {
+        run("git", ["remote", "add", "upstream", upstreamUrl], repoDir);
+      } catch {
+        run("git", ["remote", "set-url", "upstream", upstreamUrl], repoDir);
+      }
+      run("git", ["fetch", "upstream", baseBranch, "--depth=1"], repoDir);
     }
-    run("git", ["fetch", "upstream", baseBranch, "--depth=1"], repoDir);
   }
 
+  const baseRemote = ownsUpstream ? "origin" : "upstream";
   const branch = existing
     ? existing.branch
     : `hardhat-descriptor/${entity}-${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}`;
   if (!existing) {
-    run("git", ["checkout", "-b", branch, `upstream/${baseBranch}`], repoDir);
+    run("git", ["checkout", "-b", branch, `${baseRemote}/${baseBranch}`], repoDir);
   }
 
   const entityDir = path.join(repoDir, "registry", entity);
@@ -274,7 +282,7 @@ export async function submitToRegistry(opts: SubmitOptions): Promise<SubmitResul
       "--body",
       body,
       "--head",
-      `${ghUser}:${branch}`,
+      ownsUpstream ? branch : `${ghUser}:${branch}`,
       "--base",
       baseBranch,
     ],
