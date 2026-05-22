@@ -4,6 +4,8 @@ A Hardhat 3 plugin that generates [ERC-7730](https://eips.ethereum.org/EIPS/eip-
 
 The plugin auto-detects Hardhat Ignition deployments and reuses cached LLM responses, so re-running after a fresh deploy applies real addresses without an extra API call.
 
+> **Review before publishing.** Generated descriptors are LLM output and may contain incorrect field labels, wrong formatter types, or hallucinated semantics. Always open each `descriptors/*.json`, verify it against your contract's actual behavior, and test it in a wallet preview before submitting to the [clear-signing registry](https://github.com/LedgerHQ/clear-signing-erc7730-registry) or shipping it to users. The plugin is a starting point, not a substitute for human review.
+
 ## Install
 
 ```bash
@@ -67,6 +69,22 @@ Validates any descriptor file against the ERC-7730 v2 JSON Schema and cross-chec
 npx hardhat descriptor lint
 npx hardhat descriptor lint descriptors/calldata-MyToken.json descriptors/eip712-MyToken.json
 ```
+
+### `descriptor submit`
+
+Opens a draft PR to [`ethereum/clear-signing-erc7730-registry`](https://github.com/ethereum/clear-signing-erc7730-registry) under `registry/<slug(owner)>/`. Requires the [`gh` CLI](https://cli.github.com) authenticated with a fork-capable account; cloning uses SSH. By default it submits every descriptor in `outDir`; pass paths to restrict.
+
+```bash
+npx hardhat descriptor submit
+npx hardhat descriptor submit descriptors/calldata-MyToken.json
+```
+
+Before pushing or opening the PR you'll be shown the target repo, branch, and files and asked to confirm. The fork and clone steps run unattended; only the irreversible step (push + PR create/update) is gated.
+
+Flags:
+
+- `--registry`  Override the upstream registry slug (defaults to `ethereum/clear-signing-erc7730-registry`).
+- `--yes`       Skip the confirmation prompt (use in CI; the prompt is required when stdin is a TTY).
 
 ## Configuration
 

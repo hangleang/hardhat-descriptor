@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { runGenerate } from "../src/tasks/generate.js";
+import { slugifyEntity } from "../src/util/submit.js";
 import { erc20Abi, validDescriptor } from "./fixtures/abi.js";
 
 function fakeHre(outDir: string) {
@@ -123,5 +124,18 @@ describe("runGenerate", () => {
     const hre = fakeHre(dir);
     delete hre.config.descriptor.apiKey;
     await expect(runGenerate({}, hre)).rejects.toThrow(/LLM_PROVIDER_API_KEY/);
+  });
+
+});
+
+describe("slugifyEntity", () => {
+  it("lowercases and dashes whitespace", () => {
+    expect(slugifyEntity("Acme Protocol")).toBe("acme-protocol");
+  });
+  it("strips punctuation", () => {
+    expect(slugifyEntity("Acme, Inc.")).toBe("acme-inc");
+  });
+  it("throws on empty result", () => {
+    expect(() => slugifyEntity("!!!")).toThrow();
   });
 });

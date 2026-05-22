@@ -40,9 +40,27 @@ const lintTask = task(["descriptor", "lint"], "Validate ERC-7730 descriptors aga
   .setAction(() => import("./tasks/lint.js"))
   .build();
 
+const submitTask = task(["descriptor", "submit"], "Open a draft PR to the ERC-7730 registry with the generated descriptors.")
+  .addVariadicArgument({
+    name: "files",
+    description: "Descriptor files to submit. Defaults to descriptors in the configured outDir.",
+    defaultValue: [],
+  })
+  .addOption({
+    name: "registry",
+    description: "Override the upstream registry repo (default ethereum/clear-signing-erc7730-registry).",
+    defaultValue: "",
+  })
+  .addFlag({
+    name: "yes",
+    description: "Skip the interactive confirmation before pushing and opening the PR.",
+  })
+  .setAction(() => import("./tasks/submit.js"))
+  .build();
+
 const plugin: HardhatPlugin = {
   id: "hardhat-descriptor",
-  tasks: [descriptorTask, generateTask, lintTask],
+  tasks: [descriptorTask, generateTask, lintTask, submitTask],
   hookHandlers: {
     config: async () => import("./hooks/config.js"),
   },

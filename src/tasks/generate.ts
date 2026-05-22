@@ -216,6 +216,7 @@ export async function runGenerate(
       `${c.green("done")} ${c.dim("·")} ${written.length} descriptor${written.length === 1 ? "" : "s"} written${skipped.length ? `, ${skipped.length} skipped` : ""}`,
     );
   }
+
   return { written, skipped };
 }
 
