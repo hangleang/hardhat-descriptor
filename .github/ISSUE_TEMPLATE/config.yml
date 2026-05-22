@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: ERC-7730 specification
+    url: https://eips.ethereum.org/EIPS/eip-7730
+    about: Questions about the descriptor format itself belong with the spec authors.
+  - name: Hardhat 3 documentation
+    url: https://hardhat.org/
+    about: For Hardhat-specific issues unrelated to descriptor generation.

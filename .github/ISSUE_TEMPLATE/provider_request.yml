@@ -1,0 +1,48 @@
+name: New provider support
+description: Request first-class support for a new LLM provider
+labels: [enhancement, provider]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: most providers can already be used via the `openai-compatible` provider with a custom `baseUrl`. See the [README](../blob/main/README.md#provider-examples). File this issue if the provider does **not** speak the OpenAI chat-completions protocol, or if first-class features (native JSON mode, distinct auth, larger context) would materially improve descriptor quality.
+
+  - type: input
+    id: provider
+    attributes:
+      label: Provider name
+      placeholder: Mistral, Cohere, AWS Bedrock, …
+    validations:
+      required: true
+
+  - type: input
+    id: docs
+    attributes:
+      label: API documentation URL
+    validations:
+      required: true
+
+  - type: dropdown
+    id: openai-compatible
+    attributes:
+      label: Does it expose an OpenAI-compatible endpoint?
+      options:
+        - "No"
+        - "Yes — but a first-class client would unlock specific features"
+        - "Unsure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why a first-class client?
+      description: What does this provider offer that `openai-compatible` cannot? Native JSON mode, large context, distinct auth, free tier, …
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Implementation notes
+      description: Anything relevant to integration — SDK availability, rate limits, model recommendations.

@@ -1,0 +1,96 @@
+name: Bug report
+description: Report a defect in hardhat-descriptor
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please redact any API keys or proprietary contract code before submitting.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong, in one or two sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: Minimal commands and config that reproduce the issue.
+      placeholder: |
+        1. `npx hardhat compile`
+        2. `npx hardhat descriptor generate --contract Foo`
+        3. ...
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Full error output, stack trace, or generated descriptor.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: hardhat-descriptor version
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: hardhat-version
+    attributes:
+      label: Hardhat version
+      placeholder: 3.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      placeholder: 22.10.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: LLM provider
+      options:
+        - anthropic
+        - gemini
+        - openai-compatible
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      placeholder: claude-sonnet-4-6
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant `descriptor` config
+      description: Paste the `descriptor` block from your `hardhat.config.ts`. Redact keys.
+      render: ts
