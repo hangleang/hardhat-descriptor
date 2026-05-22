@@ -82,7 +82,7 @@ describe("postprocess", () => {
     });
     const formats = (descriptor!.display as any).formats;
     expect(formats["deposit()"].fields).toEqual([
-      { path: "$.value", label: "Amount", format: "amount", params: {} },
+      { path: "$.value", label: "Amount", format: "amount" },
     ]);
     expect(formats["ping()"].fields).toEqual([]);
     expect(warnings.some((w) => w.includes("Injected $.value"))).toBe(true);

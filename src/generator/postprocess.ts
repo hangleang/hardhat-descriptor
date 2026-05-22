@@ -66,6 +66,17 @@ function stripRequired(entry: unknown): void {
   }
 }
 
+// Ledger's erc7730 linter rejects `params: {}` ("Parameter type cannot be deduced from attributes").
+// Walk the format entry's fields and drop empty params objects entirely.
+function stripEmptyParams(entry: unknown): void {
+  if (!isObject(entry) || !Array.isArray(entry.fields)) return;
+  for (const f of entry.fields) {
+    if (isObject(f) && isObject(f.params) && Object.keys(f.params).length === 0) {
+      delete (f as Record<string, unknown>).params;
+    }
+  }
+}
+
 export function postprocess(input: PostprocessInput): PostprocessResult {
   const kind = input.kind ?? "calldata";
   return kind === "eip712"
@@ -108,6 +119,7 @@ function postprocessCalldata(input: PostprocessInput): PostprocessResult {
     }
     const entry = formats[key];
     stripRequired(entry);
+    stripEmptyParams(entry);
     if (payableSignatures.has(key) && isObject(entry)) {
       const fields = Array.isArray(entry.fields) ? [...entry.fields] : [];
       const hasValueField = fields.some(
@@ -118,7 +130,6 @@ function postprocessCalldata(input: PostprocessInput): PostprocessResult {
           path: "$.value",
           label: "Amount",
           format: "amount",
-          params: {},
         });
         entry.fields = fields;
         warnings.push(`Injected $.value field into display.formats["${key}"] (payable function).`);
@@ -179,6 +190,7 @@ function postprocessEip712(input: PostprocessInput): PostprocessResult {
       continue;
     }
     stripRequired(formats[key]);
+    stripEmptyParams(formats[key]);
   }
 
   if (Object.keys(formats).length === 0) {
