@@ -121,11 +121,25 @@ function warnLongIntent(
   }
 }
 
+const TOP_LEVEL_ORDER = ["$schema", "context", "metadata", "display"] as const;
+function orderTopLevel(out: Record<string, unknown>): Record<string, unknown> {
+  const ordered: Record<string, unknown> = {};
+  for (const key of TOP_LEVEL_ORDER) {
+    if (key in out) ordered[key] = out[key];
+  }
+  for (const key of Object.keys(out)) {
+    if (!(key in ordered)) ordered[key] = out[key];
+  }
+  return ordered;
+}
+
 export function postprocess(input: PostprocessInput): PostprocessResult {
   const kind = input.kind ?? "calldata";
-  return kind === "eip712"
-    ? postprocessEip712(input)
-    : postprocessCalldata(input);
+  const result = kind === "eip712" ? postprocessEip712(input) : postprocessCalldata(input);
+  if (result.descriptor !== null) {
+    result.descriptor = orderTopLevel(result.descriptor);
+  }
+  return result;
 }
 
 function postprocessCalldata(input: PostprocessInput): PostprocessResult {

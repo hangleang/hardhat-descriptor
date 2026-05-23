@@ -23,8 +23,6 @@ const config: HardhatUserConfig = {
     },
   },
   descriptor: {
-    provider: "gemini",
-    apiKey: process.env.LLM_PROVIDER_API_KEY,
     owner: "Vault Inc.",
     url: "https://vault.example",
   },

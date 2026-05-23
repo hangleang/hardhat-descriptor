@@ -4,12 +4,16 @@ import type { DescriptorKind } from "../util/paths.js";
 import { createClaudeClient } from "./claude.js";
 import { createGeminiClient } from "./gemini.js";
 import { createOpenAICompatibleClient } from "./openaiCompatible.js";
+import { createBaselineClient } from "./baseline.js";
 
 export interface LLMClient {
   generate(artifact: ContractArtifact, kind?: DescriptorKind): Promise<unknown>;
 }
 
 export function createLLMClient(cfg: DescriptorConfig): LLMClient {
+  if (cfg.provider === "none") {
+    return createBaselineClient();
+  }
   if (!cfg.apiKey) {
     throw new Error(
       `hardhat-descriptor: no API key for provider "${cfg.provider}". Set LLM_PROVIDER_API_KEY, or descriptor.apiKey in your Hardhat config.`,

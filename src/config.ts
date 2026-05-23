@@ -1,4 +1,4 @@
-export type LLMProvider = "anthropic" | "gemini" | "openai-compatible";
+export type LLMProvider = "anthropic" | "gemini" | "openai-compatible" | "none";
 
 export interface DescriptorUserConfig {
   provider?: LLMProvider;
@@ -26,6 +26,7 @@ export const DEFAULT_MODEL_BY_PROVIDER: Record<LLMProvider, string> = {
   anthropic: "claude-sonnet-4-6",
   gemini: "gemini-2.5-flash",
   "openai-compatible": "llama-3.3-70b-versatile",
+  none: "",
 };
 export const DEFAULT_MODEL = DEFAULT_MODEL_BY_PROVIDER.anthropic;
 export const DEFAULT_OUT_DIR = "descriptors";
@@ -35,7 +36,7 @@ export const SCHEMA_URL =
 
 export function resolveConfig(user: DescriptorUserConfig | undefined): DescriptorConfig {
   const u = user ?? {};
-  const provider: LLMProvider = u.provider ?? "anthropic";
+  const provider: LLMProvider = u.provider ?? "none";
   const apiKey = u.apiKey ?? process.env.LLM_PROVIDER_API_KEY;
   return {
     provider,

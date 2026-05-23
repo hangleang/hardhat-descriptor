@@ -119,7 +119,30 @@ describe("runGenerate", () => {
     expect(second.skipped.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("throws if no apiKey is resolved", async () => {
+  it("writes a baseline calldata descriptor by default when provider is none and no apiKey", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "descriptor-"));
+    const hre = fakeHre(dir);
+    hre.config.descriptor.provider = "none";
+    delete hre.config.descriptor.apiKey;
+
+    const result = await runGenerate(
+      {
+        contract: "MyToken",
+        address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        chainId: "1",
+        type: "calldata",
+      },
+      hre,
+    );
+
+    expect(result.written).toHaveLength(1);
+    const written = JSON.parse(readFileSync(result.written[0], "utf8"));
+    const formats = written.display.formats;
+    expect(formats["transfer(address recipient, uint256 amount)"]).toBeDefined();
+    expect(formats["approve(address spender, uint256 amount)"]).toBeDefined();
+  });
+
+  it("throws if an LLM provider is configured but no apiKey is resolved", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "descriptor-"));
     const hre = fakeHre(dir);
     delete hre.config.descriptor.apiKey;

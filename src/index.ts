@@ -4,7 +4,7 @@ import "./type-extensions.js";
 
 const descriptorTask = emptyTask("descriptor", "ERC-7730 clear-signing descriptor tooling.").build();
 
-const generateTask = task(["descriptor", "generate"], "Generate ERC-7730 clear-signing descriptors with Claude.")
+const generateTask = task(["descriptor", "generate"], "Generate ERC-7730 clear-signing descriptors.")
   .addOption({
     name: "contract",
     description: "Restrict generation to a single contract name (or fully qualified name).",

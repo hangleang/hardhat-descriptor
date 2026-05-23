@@ -111,8 +111,12 @@ export async function runGenerate(
     return { written: [], skipped: [] };
   }
 
+  const providerSegment =
+    cfg.provider === "none"
+      ? `${c.bold("no-llm")} ${c.dim("(ABI-only baseline)")}`
+      : `${c.bold(cfg.provider)} ${c.dim("·")} model ${c.bold(cfg.model)}`;
   log.info(
-    `using ${c.bold(cfg.provider)} ${c.dim("·")} model ${c.bold(cfg.model)} ${c.dim("·")} ${c.bold(String(selected.length))} contract${selected.length === 1 ? "" : "s"} ${c.dim("·")} kinds: ${c.bold(kinds.join(", "))}`,
+    `using ${providerSegment} ${c.dim("·")} ${c.bold(String(selected.length))} contract${selected.length === 1 ? "" : "s"} ${c.dim("·")} kinds: ${c.bold(kinds.join(", "))}`,
   );
   const outAbs = path.isAbsolute(cfg.outDir)
     ? cfg.outDir
